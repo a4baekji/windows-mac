@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 양식</title>
+</head>
+<body>
+    
+    <form>
+        <!-- 텍스트 입력 -->
+         <label for="username">사용자 이름 :</label>
+        <input type="text" id="username" name="username">
+        <br>
+        <!-- 패스워드 입력 -->
+         <label for="password">암호 :</label>
+         <input type="password" id="password" name="password">
+
+        <!-- 라디오 버튼 -->
+        <p>성별: </p>
+        <input type="radio" id="male" name="gender" value="male">
+        <label for="male">남성</label>
+
+        <input type="radio" id="female" name="gender" value="female">
+        <label for="female">여성</label>
+        <br>
+        <!-- 체크 박스 -->
+        <input type="checkbox" name="구독" id="구독">
+        <label for="구독">구독</label>
+        <input type="checkbox" id="좋아요" name="좋아요">
+        <lable for="좋아요">좋아요</lable>
+        <br>
+
+        <!-- 드롭다운 선택 -->
+        <label for="국가">국가</label>
+        <select name="국가" id="국가">
+            <option value="한국">한국</option>
+            <option value="일본">일본</option>
+            <option value="미국">미국</option>
+        </select>
+        <br>
+
+        <!-- 텍스트 에어리어 -->
+        <label for="메시지">메시지</label>
+        <textarea name="메시지" id="메시지" cols="30" rows="10"></textarea>
+        <br>
+
+        <!-- 제출 -->
+        <input type="submit" value="제출">
+    </form>
+
+</body>
+</html>
