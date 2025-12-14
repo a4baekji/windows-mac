@@ -1,0 +1,17 @@
+h1{
+    display: block;
+    text-align: center;
+    margin-top: 100px;
+}
+
+#drawcanvas{
+    border: 1px solid black;
+    display: block;
+    margin: 0 auto;
+}
+
+.control{
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
