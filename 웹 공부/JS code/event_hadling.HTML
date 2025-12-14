@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Event Handling Example</title>
+</head>
+<body>
+    
+
+    <div id="container">
+        <h1>Event Handling</h1>
+        <input type="text" id="text">
+        <button id="click">Click Me</button>
+        <button id="clear">Clear</button>
+        
+    </div>
+
+    <script>
+        const container = document.getElementById('container');
+        const text = document.getElementById('text');
+
+
+        const clickButton = document.getElementById("click");
+        const clearButton = document.getElementById("clear");
+
+        clickButton.addEventListener('click', function(){
+            clickButton.textContent = 'I am click'
+            clickButton.style.color = 'blue'
+            console.log(text.value);
+
+            const pTag = document.createElement('p')
+            pTag.textContent = text.value
+            container.appendChild(pTag)
+        });
+
+        clearButton.addEventListener('click', function(){
+            const pTags = document.querySelectorAll('div p');
+            console.log(pTags)
+            for(let i = 0; i < pTags.length; i++){
+                pTags[i].remove()
+            }
+        })
+
+    </script>
+</body>
+</html>
