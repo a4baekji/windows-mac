@@ -9,7 +9,7 @@ class Solver:
     
     # initialization
     def __init__(self, port: str) -> None:
-        self._chall_url = f"http://host8.dreamhack.games:{22631}"
+        self._chall_url = f"http://host8.dreamhack.games:{port}/"
         self._login_url = urljoin(self._chall_url, "login")
         
     # base HTTP methods
