@@ -26,5 +26,5 @@ def find_port():
     
 if __name__ == "__main__":
     chall_port = int(sys.argv[1])
-    chall_url = f"http://host1.dreamhack.games:{chall_port}/img_viewer"
+    chall_url = f"http://host8.dreamhack.games:{chall_port}/img_viewer"
     internal_port = find_port()
