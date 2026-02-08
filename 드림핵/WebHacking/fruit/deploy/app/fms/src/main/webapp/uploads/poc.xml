@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [<!ENTITY payload SYSTEM "http://resource:3000/api/_resource/test">]>
+
+<foo>
+    <bar>&payload;</bar>
+    <bar2>
+        <bar3>1</bar3>
+        <bar4>2</bar4>
+        <bar5>3</bar5>
+    </bar2>
+</foo>

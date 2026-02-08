@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <section class="panel">
+        <a th:href="@{/}" class="back">&larr; Back</a>
+        <div class="detail">
+            <div class="media">
+                <img id="photo" alt="fruit image"/>
+            </div>
+            <div class="info">
+                <h2 id="name">Fruit</h2>
+                <p id="desc"></p>
+                <table class="meta">
+                    <tr><th>Price</th><td id="price"></td></tr>
+                    <tr><th>Season</th><td id="season"></td></tr>
+                    <tr><th>Origin</th><td id="origin"></td></tr>
+                </table>
+                <div id="nutrition" class="nutrition" hidden>
+                    <h3>Nutrition</h3>
+                    <div><b>Calories/100g:</b> <span id="cal"></span></div>
+                    <div><b>Vitamins:</b> <ul id="vitamins"></ul></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script th:inline="javascript">
+        const base = [[${resourceBase}]];
+        const fruitId = [[${fruitId}]];
+
+        function fallbackImg(el){
+            el.onerror = null;
+            el.src = '/css/img/placeholder.png'; // put your placeholder path
+        }
+
+        async function load() {
+            const res = await fetch(`/api/resource/fruits/${encodeURIComponent(fruitId)}`);
+            if (!res.ok) { alert('Failed to load fruit'); return; }
+            const f = await res.json();
+
+            document.getElementById('name').textContent = f.name || '';
+            document.getElementById('desc').textContent = f.description || '';
+            document.getElementById('price').textContent = (f.price ?? '') === '' ? '' : String(f.price);
+            document.getElementById('season').textContent = f.season || '';
+            document.getElementById('origin').textContent = f.origin || '';
+
+            const img = document.getElementById('photo');
+            if (f.imagePath) {
+                img.src = f.imagePath;
+                img.onerror = () => fallbackImg(img);
+            } else {
+                fallbackImg(img);
+            }
+
+            const np = f.nutritionProfile || f.nutrition;
+            if (np) {
+                document.getElementById('nutrition').hidden = false;
+                if (typeof np.caloriesPer100g !== 'undefined') {
+                    document.getElementById('cal').textContent = np.caloriesPer100g;
+                }
+                const vit = document.getElementById('vitamins');
+                vit.innerHTML = '';
+                (np.vitamins || []).forEach(v => {
+                    const li = document.createElement('li');
+                    li.textContent = v.mg ? `${v.name}: ${v.mg}` : v.name;
+                    vit.appendChild(li);
+                });
+            }
+        }
+        load();
+    </script>
+</th:block>
+</body>
+</html>

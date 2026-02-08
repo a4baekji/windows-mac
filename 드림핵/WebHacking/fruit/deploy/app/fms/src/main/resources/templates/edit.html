@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <section class="panel cms">
+        <a th:href="@{/admin}" class="back">&larr; Back</a>
+        <h2>Edit Fruit</h2>
+
+        <form id="editForm">
+            <div class="grid-2">
+                <label>
+                    <span>Name</span>
+                    <input name="name" required/>
+                </label>
+                <label>
+                    <span>Color</span>
+                    <input name="color"/>
+                </label>
+                <label>
+                    <span>Price</span>
+                    <input name="price" type="number" step="0.01"/>
+                </label>
+                <label>
+                    <span>Season</span>
+                    <input name="season"/>
+                </label>
+                <label>
+                    <span>Origin</span>
+                    <input name="origin"/>
+                </label>
+            </div>
+
+            <label>
+                <span>Description</span>
+                <textarea name="description" rows="4"></textarea>
+            </label>
+
+            <div class="grid-2">
+                <label>
+                    <span>Image (from /uploads)</span>
+                    <select id="imageSelect"></select>
+                </label>
+                <div class="media">
+                    <img id="preview" alt="preview"/>
+                </div>
+            </div>
+
+            <h3>Nutrition</h3>
+            <div class="grid-3">
+                <label>
+                    <span>Calories/100g</span>
+                    <input name="caloriesPer100g" type="number" step="1"/>
+                </label>
+                <label>
+                    <span>Vitamins (CSV e.g. C:53.2,B6:0.4)</span>
+                    <input id="vitamins" placeholder="C:53.2,B6:0.4"/>
+                </label>
+            </div>
+
+            <div class="buttons">
+                <button type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+
+    <script th:inline="javascript">
+        const base    = /*[[${resourceBase}]]*/ '';
+        const fruitId = /*[[${fruitId}]]*/ '';
+        const apiBase = `/api/resource`;
+
+        const form = document.getElementById('editForm');
+        const sel  = document.getElementById('imageSelect');
+        const prev = document.getElementById('preview');
+
+        function parseVitamins(str) {
+            if (!str) return [];
+            return str.split(',').map(s => s.trim()).filter(Boolean).map(p => {
+                const [name, mg] = p.split(':').map(v => v.trim());
+                return { name, mg: mg ? Number(mg) : undefined };
+            });
+        }
+
+        function basename(path) {
+            if (!path) return '';
+            const i = path.lastIndexOf('/');
+            return i >= 0 ? path.substring(i+1) : path;
+        }
+
+        sel.addEventListener('change', () => {
+            const file = sel.value;
+            prev.src = file ? (`/uploads/` + file) : '';
+        });
+
+        async function loadUploads() {
+            const r = await fetch('/admin/api/uploads');
+            const list = r.ok ? await r.json() : [];
+            sel.innerHTML = '<option value="">(no image)</option>' +
+                list.map(f => `<option value="${f}">${f}</option>`).join('');
+        }
+
+        async function loadFruit() {
+            const r = await fetch(`${apiBase}/fruits/${encodeURIComponent(fruitId)}`);
+            if (!r.ok) { alert('Failed to load fruit'); return; }
+            const f = await r.json();
+
+            form.name.value = f.name || '';
+            form.color.value = f.color || '';
+            form.price.value = (f.price ?? '') === '' ? '' : String(f.price);
+            form.season.value = f.season || '';
+            form.origin.value = f.origin || '';
+            form.description.value = f.description || '';
+
+            const np = f.nutritionProfile || f.nutrition;
+            if (np) {
+                form.caloriesPer100g.value = (np.caloriesPer100g ?? '') === '' ? '' : String(np.caloriesPer100g);
+                const vitCsv = (np.vitamins || []).map(v => v.mg ? `${v.name}:${v.mg}` : v.name).join(',');
+                document.getElementById('vitamins').value = vitCsv;
+            }
+
+            const file = basename(f.imagePath);
+            if (file) {
+                sel.value = file;
+                prev.src = `/uploads/${file}`;
+            } else {
+                sel.value = '';
+                prev.removeAttribute('src');
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: form.name.value.trim(),
+                color: form.color.value.trim() || undefined,
+                price: form.price.value ? Number(form.price.value) : undefined,
+                season: form.season.value.trim() || undefined,
+                origin: form.origin.value.trim() || undefined,
+                description: form.description.value.trim() || undefined
+            };
+
+            if (sel.value) payload.imagePath = `/uploads/${sel.value}`;
+
+            const cal = form.caloriesPer100g.value;
+            const vit = document.getElementById('vitamins').value;
+            if (cal || vit) {
+                payload.nutrition = {
+                    caloriesPer100g: cal ? Number(cal) : undefined,
+                    vitamins: parseVitamins(vit)
+                };
+            }
+
+            const r = await fetch(`${apiBase}/fruits/${encodeURIComponent(fruitId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!r.ok) { alert(await r.text()); return; }
+            alert('Updated');
+            location.href = '/admin';
+        });
+
+        (async function init(){
+            await loadUploads();
+            await loadFruit();
+        })();
+    </script>
+
+    <style>
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+        @media (max-width: 900px) {
+            .grid-2, .grid-3 { grid-template-columns:1fr; }
+        }
+    </style>
+</th:block>
+</body>
+</html>

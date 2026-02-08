@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<body>
+    <th:block th:fragment="content">
+        <section class="panel">
+            <h2>My Page</h2>
+            <p><b>Nickname:</b> <span th:text="${nickname}">nick</span></p>
+
+            <h3>Change Password</h3>
+            <form id="pwform">
+
+                <input id="userId" name="userId" type="hidden" th:value="${#authentication?.name}"/>
+
+                <input name="currentPassword" type="password" placeholder="current" required/>
+                <input name="newPassword" type="password" placeholder="new" required/>
+                <button>Update</button>
+            </form>
+        </section>
+
+        <script>
+            document.getElementById('pwform').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+
+                const body = new URLSearchParams(fd);
+
+                const res = await fetch('/api/changePassword', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                    body: body.toString()
+                });
+
+                const ct = res.headers.get('content-type') || '';
+                const data = ct.includes('application/json') ? await res.json() : { message: await res.text() };
+
+                if (res.ok) {
+                    alert(data.message || 'Password updated.');
+                } else {
+                    alert(data.message || 'Password update failed.');
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>

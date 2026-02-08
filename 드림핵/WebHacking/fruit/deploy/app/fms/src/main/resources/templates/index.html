@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::body})}">
+<body>
+<section class="grid">
+    <h1>All Fruits</h1>
+    <input id="q" placeholder="search name"/>
+    <div id="fruits" class="cards"></div>
+</section>
+<script>
+    const base = "[[${resourceBase}]]";
+    async function load() {
+        const q = document.getElementById('q').value || '';
+        const res = await fetch(`/api/resource/fruits?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        const root = document.getElementById('fruits');
+        root.innerHTML = '';
+        data.forEach(f => {
+            const el = document.createElement('a');
+            el.className='card';
+            el.href = `/fruit/${f._id}`;
+            el.innerHTML = `<img src="${f.imagePath || ''}" onerror="this.remove()"/>
+                        <div><b>${f.name}</b><div>${f.color || ''}</div></div>`;
+            root.appendChild(el);
+        });
+    }
+    document.getElementById('q').addEventListener('input', load);
+    load();
+</script>
+</body>
+</html>

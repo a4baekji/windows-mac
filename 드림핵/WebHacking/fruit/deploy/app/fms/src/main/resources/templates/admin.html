@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <section class="panel cms">
+        <h2>CMS: Fruits</h2>
+
+        <form id="fruitForm">
+            <input name="name" placeholder="name" required/>
+            <input name="price" type="number" step="0.01" placeholder="price"/>
+            <input name="season" placeholder="season"/>
+            <input name="origin" placeholder="origin"/>
+            <textarea name="description" placeholder="description"></textarea>
+            <input name="image" type="file" accept="image/*"/>
+
+            <!-- Nutrition -->
+            <h3>Nutrition</h3>
+            <div class="grid-2">
+                <label>
+                    <span>Calories per 100g</span>
+                    <input name="caloriesPer100g" type="number" step="1" min="0" placeholder="e.g. 47"/>
+                </label>
+                <label>
+                    <span>Vitamins (CSV, e.g. C:53.2,B6:0.4)</span>
+                    <input name="vitaminsCsv" placeholder="C:53.2,B6:0.4"/>
+                </label>
+            </div>
+
+            <button type="submit">Save</button>
+        </form>
+
+        <div class="cards" id="adminList"></div>
+    </section>
+
+    <script th:inline="javascript">
+        const base = /*[[${resourceBase}]]*/ '';
+        const list = document.getElementById('adminList');
+
+        function parseVitamins(str) {
+            if (!str) return [];
+            return str.split(',')
+                .map(s => s.trim()).filter(Boolean)
+                .map(pair => {
+                    const [name, mg] = pair.split(':').map(v => v.trim());
+                    return { name, mg: (mg !== undefined && mg !== '') ? Number(mg) : undefined };
+                });
+        }
+
+        async function uploadImage(file) {
+            if (!file || !file.size) return null;
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            const r = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+            if (r.status === 413) {
+                alert('Max 3MB');
+                return null;
+            }
+            if (!r.ok) throw new Error(await r.text());
+            const { path } = await r.json();
+            return path;
+        }
+
+        function clean(obj) {
+            Object.keys(obj).forEach(k => {
+                if (obj[k] === '' || obj[k] === null) delete obj[k];
+            });
+            return obj;
+        }
+
+        async function loadAll() {
+            const res = await fetch(`/api/resource/fruits`);
+            if (!res.ok) { list.innerHTML = 'Load failed'; return; }
+            const items = await res.json();
+
+            list.innerHTML = '';
+            items.forEach(f => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `
+        <img src="${f.imagePath || ''}" onerror="this.remove()"/>
+        <div class="meta">
+          <b>${f.name}</b><br/>
+          <small>${f.season || ''}</small>
+        </div>
+        <div class="buttons">
+          <button data-id="${f._id}" class="edit">Edit</button>
+          <button data-id="${f._id}" class="del">Delete</button>
+        </div>`;
+                list.appendChild(el);
+            });
+        }
+
+        document.getElementById('fruitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const payload = Object.fromEntries(
+                [...fd.entries()].filter(([k]) => k !== 'image')
+            );
+
+            if (payload.price) payload.price = Number(payload.price);
+            const calories = fd.get('caloriesPer100g');
+            const vitCsv   = fd.get('vitaminsCsv');
+            const vitamins = parseVitamins(vitCsv);
+            if ((calories && calories !== '') || vitamins.length) {
+                payload.nutrition = clean({
+                    caloriesPer100g: calories ? Number(calories) : undefined,
+                    vitamins
+                });
+            }
+
+            const file = fd.get('image');
+            const imgPath = await uploadImage(file);
+            if (imgPath) payload.imagePath = imgPath;
+
+            clean(payload);
+
+            const r = await fetch(`/api/resource/fruits`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!r.ok) {
+                alert(await r.text());
+                return;
+            }
+
+            e.target.reset();
+            loadAll();
+        });
+
+        list.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.edit, .del');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (!id) return;
+
+            if (btn.classList.contains('del')) {
+                if (!confirm('Delete this fruit?')) return;
+                await fetch(`/api/resource/fruits/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                loadAll();
+                return;
+            }
+            if (btn.classList.contains('edit')) {
+                location.href = `/admin/edit/${encodeURIComponent(id)}`;
+            }
+        });
+
+        loadAll();
+    </script>
+
+    <style>
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        @media (max-width: 900px) { .grid-2 { grid-template-columns:1fr; } }
+    </style>
+</th:block>
+</body>
+</html>

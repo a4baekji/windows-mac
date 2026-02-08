@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(content)">
+<head>
+    <meta charset="utf-8"/>
+    <title>Fruit Market</title>
+    <link rel="stylesheet" th:href="@{/css/fruit.css}"/>
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">🍊 Fruit Market</div>
+    <div class="greet" th:text="${headerGreeting}">Hello Guest! 2025-01-01</div>
+    <nav>
+        <a th:href="@{/}">Home</a>
+        <a th:href="@{/mypage}">My Page</a>
+        <a th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Admin</a>
+        <a th:href="@{/login}" sec:authorize="!isAuthenticated()">Login</a>
+        <a th:href="@{/logout}" sec:authorize="isAuthenticated()">Logout</a>
+    </nav>
+</header>
+
+<main th:insert="${content}"></main>
+
+<footer class="foot">© Fruit Market</footer>
+</body>
+</html>

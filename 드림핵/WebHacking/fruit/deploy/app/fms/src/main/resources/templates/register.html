@@ -1,0 +1,24 @@
+<!-- app/src/main/resources/templates/register.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <section class="panel">
+        <h2>Register</h2>
+        <div th:if="${error}" class="msg error" th:text="${error}">Error</div>
+        <form method="post" action="/register">
+            <input name="userId" placeholder="userId" required/>
+            <input name="password" type="password" placeholder="password" required/>
+            <input name="nickname" placeholder="nickname" maxlength="30" required/>
+            <input name="phone" placeholder="phone" required/>
+            <button type="submit">Create</button>
+        </form>
+
+        <p style="margin-top:12px">
+            <a th:href="@{/login}">Back to login</a>
+        </p>
+    </section>
+</th:block>
+</body>
+</html>
